@@ -1,54 +1,101 @@
-#define RED_PIN   9
-#define GREEN_PIN 10
-#define BLUE_PIN  11
+const int redPin = 9; 
+const int greenPin = 10; 
+const int bluePin = 11; 
 
-int R = 0, G = 0, B = 0;
+int currentR = 0; 
+int currentG = 0; 
+int currentB = 0; 
 
-int clamp(int v) {
-  if (v > 255) return 255;
-  if (v < 0) return 0;
-  return v;
-}
+void setup() { 
+  Serial.begin(9600); 
+  pinMode(redPin, OUTPUT); 
+  pinMode(greenPin, OUTPUT); 
+  pinMode(bluePin, OUTPUT); 
 
-void applyLED() {
-  analogWrite(RED_PIN, R);
-  analogWrite(GREEN_PIN, G);
-  analogWrite(BLUE_PIN, B);
-}
+  Serial.println("He thong da san sang.");
+  Serial.println("Nhap: RxGyBz (sang mai mai)");
+  Serial.println("Hoac: RxGyBzDt (t la thoi gian ms, neu t=0 den khong sang)");
+} 
 
-void setup() {
-  Serial.begin(9600);
-  pinMode(RED_PIN, OUTPUT);
-  pinMode(GREEN_PIN, OUTPUT);
-  pinMode(BLUE_PIN, OUTPUT);
-}
+void loop() { 
+  if (Serial.available() > 0) { 
+    String input = Serial.readStringUntil('\n'); 
+    input.trim(); 
 
-void loop() {
-  if (Serial.available()) {
-    String s = Serial.readStringUntil('\n');
-    s.trim();
+    // 1. TÁCH GIÁ TRỊ MÀU (Lưu vào biến, CHƯA BẬT ĐÈN NGAY)
+    if (input.indexOf('R') != -1) { 
+      currentR = constrain(parseValue(input, 'R'), 0, 255);
+    } 
 
-    int r = s.indexOf('R');
-    int g = s.indexOf('G');
-    int b = s.indexOf('B');
-    int d = s.indexOf('D');
+    if (input.indexOf('G') != -1) { 
+      currentG = constrain(parseValue(input, 'G'), 0, 255);
+    } 
 
-    if (r != -1 && g != -1)
-      R = clamp(s.substring(r + 1, g).toInt());
+    if (input.indexOf('B') != -1) { 
+      currentB = constrain(parseValue(input, 'B'), 0, 255);
+    } 
 
-    if (g != -1 && b != -1)
-      G = clamp(s.substring(g + 1, b).toInt());
-
-    if (b != -1 && d != -1)
-      B = clamp(s.substring(b + 1, d).toInt());
-
-    applyLED();
-
-    if (d != -1) {
-      int t = s.substring(d + 1).toInt();
-      delay(t);
-      R = G = B = 0;
-      applyLED();
+    // 2. KIỂM TRA THỜI GIAN (D)
+    bool hasDuration = (input.indexOf('D') != -1);
+    int duration = 0;
+    
+    if (hasDuration) {
+      duration = parseValue(input, 'D');
     }
-  }
+
+    if (hasDuration && duration == 0) {
+      analogWrite(redPin, 0); 
+      analogWrite(greenPin, 0); 
+      analogWrite(bluePin, 0);
+      
+      currentR = 0; currentG = 0; currentB = 0;
+      
+      Serial.println("Phat hien D0 -> Den KHONG sang.");
+    } 
+    else {
+      
+      analogWrite(redPin, currentR); 
+      analogWrite(greenPin, currentG); 
+      analogWrite(bluePin, currentB); 
+
+      Serial.print("Trang thai ON - R:"); Serial.print(currentR);
+      Serial.print(" G:"); Serial.print(currentG);
+      Serial.print(" B:"); Serial.println(currentB);
+
+      if (hasDuration && duration > 0) {
+        delay(duration); // Chờ
+        
+        // Tắt đèn
+        analogWrite(redPin, 0); 
+        analogWrite(greenPin, 0); 
+        analogWrite(bluePin, 0); 
+
+        // Reset biến về 0
+        currentR = 0; currentG = 0; currentB = 0;
+        Serial.println("-> Da tat den sau thoi gian cho.");
+      }
+    }
+  } 
+} 
+
+// Hàm tách số 
+int parseValue(String data, char identifier) { 
+  int index = data.indexOf(identifier); 
+  if (index == -1) return -1; 
+
+  String valueStr = ""; 
+
+  for (int i = index + 1; i < data.length(); i++) { 
+    char c = data.charAt(i); 
+    if (isDigit(c) || c == '-') { 
+      valueStr += c; 
+    } else { 
+      break; 
+    } 
+  } 
+
+  if (valueStr.length() > 0) { 
+    return valueStr.toInt(); 
+  } 
+  return 0;  
 }
