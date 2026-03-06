@@ -3,67 +3,95 @@
 
 #define RST_PIN         9          
 #define SS_PIN          10         
-#define LED_PIN         2          
+#define LED_PIN         2    
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);  
 
-// THAY ĐỔI MÃ UID CỦA BẠN TẠI ĐÂY
-byte correctUID[] = {0xA1, 0xB2, 0xC3, 0xD4}; 
-int scanCount = 0; // Biến đếm số lần quét đúng liên tiếp
+byte correctUID[] = {0x29, 0xDC, 0x143, 0x14}; 
+int mode = 0; // 0: Tắt, 1: Sáng mãi, 2: Nhấp nháy mãi
+
+unsigned long lastCorrectTime = 0;
+int scanCount = 0;
+bool pendingCheck = false; 
 
 void setup() {
   Serial.begin(9600);
-  SPI.begin();           
-  mfrc522.PCD_Init();    
+  SPI.begin();
+  mfrc522.PCD_Init();
   pinMode(LED_PIN, OUTPUT);
-  Serial.println("San sang quet the...");
+  digitalWrite(LED_PIN, LOW);
+  Serial.println("He thong Lab 5: Cho quet the...");
 }
 
 void loop() {
-  // Kiểm tra xem có thẻ mới đưa vào không
-  if ( ! mfrc522.PICC_IsNewCardPresent()) return;
-  if ( ! mfrc522.PICC_ReadCardSerial()) return;
+  // --- PHẦN 1: HIỆU ỨNG ĐÈN (KHÔNG DÙNG DELAY) ---
+  if (mode == 0) {
+    digitalWrite(LED_PIN, LOW);
+  } 
+  else if (mode == 1) {
+    digitalWrite(LED_PIN, HIGH);
+  } 
+  else if (mode == 2) {
+    digitalWrite(LED_PIN, (millis() / 300) % 2); 
+  }
 
-  Serial.print("UID cua the: ");
-  bool isMatch = true;
+  // --- PHẦN 2: LOGIC ĐỢI 1.5S ĐỂ CHỐT TẮT/MỞ (CHỈ CHẠY KHI ĐANG Ở MODE 0 HOẶC 1) ---
+  if (pendingCheck && (millis() - lastCorrectTime > 1500)) {
+    if (scanCount == 1) {
+      mode = 1; 
+      Serial.println("Ket qua: SANG MAI");
+    } 
+    else if (scanCount >= 2) {
+      mode = 0; 
+      Serial.println("Ket qua: TAT");
+    }
+    pendingCheck = false;
+    scanCount = 0;
+  }
 
-  // So sánh UID thẻ vừa quét với correctUID
-  for (byte i = 0; i < mfrc522.uid.size; i++) {
-    Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
-    Serial.print(mfrc522.uid.uidByte[i], HEX);
-    
+  // --- PHẦN 3: ĐỌC THẺ RFID ---
+  if (!mfrc522.PICC_IsNewCardPresent() || !mfrc522.PICC_ReadCardSerial()) {
+    return;
+  }
+
+  bool match = true;
+  for (byte i = 0; i < 4; i++) {
     if (mfrc522.uid.uidByte[i] != correctUID[i]) {
-      isMatch = false;
+      match = false;
+      break;
     }
   }
-  Serial.println();
 
-  if (isMatch) {
-    // --- YÊU CẦU 1 & 3: QUÉT ĐÚNG THẺ ---
-    scanCount++; 
-    
-    if (scanCount == 1) {
-      Serial.println("Quet dung lan 1: LED SANG");
-      digitalWrite(LED_PIN, HIGH);
+  if (match) {
+    // Nếu đang nhấp nháy (sai thẻ) mà quẹt đúng -> Sáng luôn lập tức
+    if (mode == 2) {
+      mode = 1;
+      pendingCheck = false; // Hủy bỏ bộ đợi 1.5s
+      scanCount = 0;
+      Serial.println("Dang nhay -> Quet dung: SANG NGAY LAP TUC");
     } 
-    else if (scanCount == 2) {
-      Serial.println("Quet dung lan 2 lien tiep: LED TAT");
-      digitalWrite(LED_PIN, LOW);
-      scanCount = 0; // Reset lại biến đếm
+    // Nếu đang bình thường thì mới chạy bộ đợi 1.5s để phân biệt quẹt 1 hay 2 lần
+    else {
+      if (!pendingCheck) {
+        lastCorrectTime = millis();
+        pendingCheck = true;
+        scanCount = 1;
+        Serial.println("Quet lan 1... Dang doi 1.5s...");
+      } else {
+        scanCount++;
+        Serial.print("Quet lan ");
+        Serial.println(scanCount);
+      }
     }
+    delay(300); // Chống dội thẻ
   } 
   else {
-    // --- YÊU CẦU 2: QUÉT SAI THẺ ---
-    Serial.println("Quet sai the: LED NHAP NHAY");
-    scanCount = 0; // Reset biến đếm vì không còn liên tiếp
-    
-    // Nhấp nháy 3 lần
-    for (int i = 0; i < 3; i++) {
-      digitalWrite(LED_PIN, HIGH);
-      delay(200);
-      digitalWrite(LED_PIN, LOW);
-      delay(200);
-    }
+    // Quét sai thẻ: Chuyển sang nhấp nháy ngay lập tức
+    mode = 2; 
+    pendingCheck = false;
+    scanCount = 0;
+    Serial.println("Quet sai: NHAP NHAY MAI");
+    delay(500);
   }
 
   mfrc522.PICC_HaltA();
