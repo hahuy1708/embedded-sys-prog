@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head><title>IoT Web</title></head>
+<body style="text-align: center;">
+    <h1>Hệ Thống IoT</h1>
+
+    <h3>Khoảng cách: {{ d }} cm</h3>
+    <a href="/">[Cập nhật]</a>
+
+    <h3>Trạng thái LED: {{ "ĐANG BẬT" if led == 1 else "ĐANG TẮT" }}</h3>
+    <a href="{{ '/off' if led == 1 else '/on' }}">[THAY ĐỔI]</a>
+</body>
+</html>
