@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Cam bien HC-SR04</h2>
+    <p>Khoang cach: {{ d }} cm</p>
+    <a href="/">Cap nhat</a>
+
+    <h2>Den LED</h2>
+
+    {% if led == 1 %}
+        <p>Trang thai: DANG BAT</p>
+        <a href="/off">TAT</a>
+    {% else %}
+        <p>Trang thai: DANG TAT</p>
+        <a href="/on">BAT</a>
+    {% endif %}
+
+</body>
+</html>
