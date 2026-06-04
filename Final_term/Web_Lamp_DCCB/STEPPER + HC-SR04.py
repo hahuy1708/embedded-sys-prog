@@ -5,7 +5,14 @@ import time
 app = Flask(__name__)
 LED, TRIG, ECHO = 24, 2, 3
 PINS = [18, 19, 20, 21] # Đổi chân để tránh trùng với TRIG/ECHO
-STEP = [[1,0,0,0],[1,1,0,0],[0,1,0,0],[0,1,1,0],[0,0,1,0],[0,0,1,1],[0,0,0,1],[1,0,0,1]]
+STEP = [[1,0,0,0],
+        [1,1,0,0],
+        [0,1,0,0],
+        [0,1,1,0],
+        [0,0,1,0],
+        [0,0,1,1],
+        [0,0,0,1],
+        [1,0,0,1]]
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(LED, GPIO.OUT); GPIO.setup(TRIG, GPIO.OUT); GPIO.setup(ECHO, GPIO.IN)

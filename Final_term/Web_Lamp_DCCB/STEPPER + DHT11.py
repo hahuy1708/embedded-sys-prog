@@ -4,15 +4,21 @@ import time, board, adafruit_dht
 
 app = Flask(__name__)
 LED = 24; PINS = [18, 23, 24, 25]
-STEP = [[1,0,0,0],[1,1,0,0],[0,1,0,0],[0,1,1,0],[0,0,1,0],[0,0,1,1],[0,0,0,1],[1,0,0,1]]
+STEP = [[1,0,0,0],
+        [1,1,0,0],
+        [0,1,0,0],
+        [0,1,1,0],
+        [0,0,1,0],
+        [0,0,1,1],
+        [0,0,0,1],
+        [1,0,0,1]]
 
 GPIO.setmode(GPIO.BCM); GPIO.setup(LED, GPIO.OUT)
 for p in PINS: GPIO.setup(p, GPIO.OUT); GPIO.output(p, 0)
 dht = adafruit_dht.DHT11(board.D4, use_pulseio=False)
 
 def doc_dht():
-    try: return dht.temperature, dht.humidity
-    except RuntimeError: return "Lỗi", "Lỗi"
+    return dht.temperature, dht.humidity
 
 def quay_buoc(so_buoc):
     for _ in range(so_buoc):

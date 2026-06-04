@@ -10,8 +10,7 @@ pi = pigpio.pi()
 dht = adafruit_dht.DHT11(board.D4, use_pulseio=False)
 
 def doc_dht():
-    try: return dht.temperature, dht.humidity
-    except RuntimeError: return "Lỗi", "Lỗi"
+    return dht.temperature, dht.humidity
 
 def set_servo(goc):
     pi.set_servo_pulsewidth(SERVO_PIN, 500 + (goc / 180.0) * 2000)
