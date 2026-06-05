@@ -3,7 +3,8 @@ from flask import Flask, render_template
 import time, board, adafruit_dht
 
 app = Flask(__name__)
-LED = 24; PINS = [18, 23, 24, 25]
+LED = 24
+PINS = [18, 19, 20, 21] # Chân của step
 STEP = [[1,0,0,0],
         [1,1,0,0],
         [0,1,0,0],
@@ -13,8 +14,13 @@ STEP = [[1,0,0,0],
         [0,0,0,1],
         [1,0,0,1]]
 
-GPIO.setmode(GPIO.BCM); GPIO.setup(LED, GPIO.OUT)
-for p in PINS: GPIO.setup(p, GPIO.OUT); GPIO.output(p, 0)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(LED, GPIO.OUT)
+
+for p in PINS: 
+    GPIO.setup(p, GPIO.OUT)
+    GPIO.output(p, 0)
+
 dht = adafruit_dht.DHT11(board.D4, use_pulseio=False)
 
 def doc_dht():
@@ -23,9 +29,11 @@ def doc_dht():
 def quay_buoc(so_buoc):
     for _ in range(so_buoc):
         for st in STEP:
-            for chan, gt in zip(PINS, st): GPIO.output(chan, gt)
+            for chan, gt in zip(PINS, st): 
+                GPIO.output(chan, gt)
             time.sleep(0.001)
-    for p in PINS: GPIO.output(p, 0) # Tắt chân chống nóng động cơ
+    for p in PINS: 
+        GPIO.output(p, 0) # Tắt chân chống nóng động cơ
 
 @app.route("/")
 def index():

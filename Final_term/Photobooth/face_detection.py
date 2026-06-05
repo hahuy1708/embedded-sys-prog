@@ -22,14 +22,12 @@ while True:
     for (x, y, w, h) in faces:
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-    
-    for i in range(3): # Duyệt qua 3 đèn LED
+    for i in range(len(LEDS)): # Duyệt qua 3 đèn LED
         if i < len(faces):
             GPIO.output(LEDS[i], GPIO.HIGH) # Bật đèn nếu số mặt lớn hơn chỉ số đèn
         else:
             GPIO.output(LEDS[i], GPIO.LOW)
         
-    # HIỂN THỊ VÀ THOÁT
     cv2.imshow('Face Detection', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'): break
 

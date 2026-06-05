@@ -5,12 +5,16 @@ import time, pigpio, board, adafruit_dht
 app = Flask(__name__)
 LED, SERVO_PIN = 24, 18
 
-GPIO.setmode(GPIO.BCM); GPIO.setup(LED, GPIO.OUT)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(LED, GPIO.OUT)
 pi = pigpio.pi()
 dht = adafruit_dht.DHT11(board.D4, use_pulseio=False)
 
 def doc_dht():
-    return dht.temperature, dht.humidity
+    try:
+        return dht.temperature, dht.humidity
+    except RuntimeError:
+        return None, None
 
 def set_servo(goc):
     pi.set_servo_pulsewidth(SERVO_PIN, 500 + (goc / 180.0) * 2000)

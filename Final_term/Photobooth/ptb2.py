@@ -7,7 +7,6 @@ import RPi.GPIO as GPIO
 
 LEDS = [17, 27, 22]  # Mảng 3 đèn LED báo số lượng người
 BTN_SNAP = 23  # Nút bấm chụp ảnh
-last_time = 0  # Biến chống rung nút nhấn (Debounce)
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(LEDS, GPIO.OUT)
@@ -29,20 +28,17 @@ sticker = cv2.imread('sticker.png')
 
 while True:
   ret, frame = cap.read()
-  if not ret:
-    break
-
+  if not ret: break
   frame = cv2.flip(frame, 1)
-
   gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
   faces = face_cascade.detectMultiScale(gray, 1.1, 5)
-
-  for i in range(3):
-    GPIO.output(LEDS[i], i < len(faces))
-
+  for i in range(len(LEDS)):
+    if i < len(faces):
+      GPIO.output(LEDS[i], GPIO.HIGH)
+    else:
+      GPIO.output(LEDS[i], GPIO.LOW)
   for x, y, w, h in faces:
     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)  # Vẽ khung xanh quanh mặt
-
     if sticker is not None:
       st_resize = cv2.resize(sticker, (w, h))
       frame[y : y + h, x : x + w] = st_resize[:, :, :3]

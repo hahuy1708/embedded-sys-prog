@@ -6,11 +6,15 @@ app = Flask(__name__)
 LED, SERVO_PIN, TRIG, ECHO = 24, 18, 2, 3
 
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(LED, GPIO.OUT); GPIO.setup(TRIG, GPIO.OUT); GPIO.setup(ECHO, GPIO.IN)
+GPIO.setup(LED, GPIO.OUT)
+GPIO.setup(TRIG, GPIO.OUT)
+GPIO.setup(ECHO, GPIO.IN)
 pi = pigpio.pi()
 
 def distance():
-    GPIO.output(TRIG, 1); time.sleep(0.00001); GPIO.output(TRIG, 0)
+    GPIO.output(TRIG, 1)
+    time.sleep(0.00001)
+    GPIO.output(TRIG, 0)
     while GPIO.input(ECHO) == 0: start = time.time()
     while GPIO.input(ECHO) == 1: end = time.time()
     return round((end - start) * 34300 / 2, 1)
